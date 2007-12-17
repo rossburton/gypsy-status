@@ -135,6 +135,50 @@ class GpsSatelliteChart(gtk.HBox):
             self.add(box)
 
 
+class MapView(gtk.Image):
+    def __init__(self, gps):
+        gtk.Image.__init__(self)
+        self.device = gps["Position"]
+        self.device.connect_to_signal("PositionChanged", self.changed)
+        self.device.GetPosition(reply_handler=self.changed, error_handler=error_handler)
+        self.current_quad = None
+        
+    def changed(self, fields, timestamp, latitude, longitude, altitude):
+        import urllib2
+        if fields & (gypsy.POSITION_FIELDS_LONGITUDE + gypsy.POSITION_FIELDS_LATITUDE):
+            quad = self.longlat_to_quad(longitude, latitude)
+            if (quad == self.current_quad):
+                return
+            self.current_quad = quad
+            url = "http://kh0.google.co.uk/kh?n=404&v=23&t=%s" % quad
+            data = ''.join(urllib2.urlopen(url).readlines())
+            loader = gtk.gdk.PixbufLoader()
+            loader.write(data)
+            loader.close()
+            pixbuf = loader.get_pixbuf()
+            self.set_from_pixbuf(pixbuf)
+    
+    def longlat_to_quad(self, longitude, latitude):
+        import math
+        x = (180.0 + longitude) / 360.0
+        y = math.radians(-latitude)
+        y = 0.5 * math.log((1 + math.sin(y)) / (1 - math.sin(y)))
+        y *= 1.0 / (2 * math.pi)
+        y += 0.5
+        
+        lookup = "qrts"
+        digits = 16
+        quad = "t"
+        while digits > 0:
+            x -= int(x)
+            y -= int(y)
+            quad = quad + lookup[(x >= 0.5 and 1 or 0) + (y >= 0.5 and 2 or 0)]
+            x = x * 2
+            y = y * 2
+            digits = digits - 1
+        return quad
+
+
 DBusGMainLoop(set_as_default=True)
 
 gps = gypsy.GPS("00:0B:0D:88:A4:A3")
@@ -148,7 +192,7 @@ window.set_title("Gypsy Status")
 box = gtk.VBox(False, 0)
 window.add(box)
 
-table = gtk.Table(5, 2, False)
+table = gtk.Table(5, 3, False)
 table.set_border_width(8)
 table.set_row_spacings(8)
 table.set_col_spacings(8)
@@ -172,10 +216,13 @@ for (l, w) in widgets:
     table.attach(label, 1, 2, y, y+1, yoptions=gtk.FILL)
     y = y + 1
 
-table.attach(GpsSatelliteChart(gps), 0, 2, y, y+1)
+table.attach(MapView(gps), 2, 3, 0, y)
+
+table.attach(GpsSatelliteChart(gps), 0, 3, y, y+1)
 
 statusbar = GpsFixStatusbar(gps)
 box.pack_start(statusbar, False, False, 0)
+
 
 window.show_all()
 gtk.main()
