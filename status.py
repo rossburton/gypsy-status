@@ -8,15 +8,26 @@ def error_handler(exception):
     # TODO: display dialog
     print exception
 
-# A GtkLabel which displays the latest time as reported by the GPS.
-class GpsTimeLabel(gtk.Label):
+class GpsWidget(gtk.Widget):
     def __init__(self, gps):
+        gtk.Widget.__init__(self)
+        self.set_gps(gps)
+        
+    def set_gps(self, gps):
+        raise NotImplementedError
+
+# A GtkLabel which displays the latest time as reported by the GPS.
+class GpsTimeLabel(GpsWidget, gtk.Label):
+    def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.Label.__init__(self)
         self.set_selectable(True)
+
+    def set_gps(self, gps):
         self.device = gps["Time"]
         self.device.connect_to_signal("TimeChanged", self.time_changed)
         self.device.GetTime(reply_handler=self.time_changed, error_handler=error_handler)
-
+        
     def time_changed(self, timestamp):
         if timestamp:
             self.set_text(time.strftime("%c", time.gmtime(timestamp)))
@@ -25,10 +36,13 @@ class GpsTimeLabel(gtk.Label):
 
 
 # A statusbar which displays the fix status of the GPS
-class GpsFixStatusbar(gtk.Statusbar):
+class GpsFixStatusbar(GpsWidget, gtk.Statusbar):
     def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.Statusbar.__init__(self)
         self.context = self.get_context_id("FixStatus")
+
+    def set_gps(self, gps):
         self.device = gps["Device"]
         self.device.connect_to_signal("FixStatusChanged", self.fix_changed)
         self.device.GetFixStatus(reply_handler=self.fix_changed, error_handler=error_handler)
@@ -45,10 +59,13 @@ class GpsFixStatusbar(gtk.Statusbar):
             self.push(self.context, "Invalid fix")
 
 
-class GpsAccuracyLabel(gtk.Label):
+class GpsAccuracyLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.Label.__init__(self)
         self.set_selectable(True)
+
+    def set_gps(self, gps):
         self.device = gps["Accuracy"]
         self.device.connect_to_signal("AccuracyChanged", self.changed)
         self.device.GetAccuracy(reply_handler=self.changed, error_handler=error_handler)
@@ -60,10 +77,13 @@ class GpsAccuracyLabel(gtk.Label):
             (fields & gypsy.ACCURACY_FIELDS_VERTICAL) and vdop or 0))
 
 
-class GpsLatitudeLabel(gtk.Label):
+class GpsLatitudeLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.Label.__init__(self)
         self.set_selectable(True)
+
+    def set_gps(self, gps):
         self.device = gps["Position"]
         self.device.connect_to_signal("PositionChanged", self.changed)
         self.device.GetPosition(reply_handler=self.changed, error_handler=error_handler)
@@ -74,10 +94,13 @@ class GpsLatitudeLabel(gtk.Label):
         else:
             self.set_text("Unknown latitude")
 
-class GpsLongitudeLabel(gtk.Label):
+class GpsLongitudeLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.Label.__init__(self)
         self.set_selectable(True)
+
+    def set_gps(self, gps):
         self.device = gps["Position"]
         self.device.connect_to_signal("PositionChanged", self.changed)
         self.device.GetPosition(reply_handler=self.changed, error_handler=error_handler)
@@ -89,10 +112,13 @@ class GpsLongitudeLabel(gtk.Label):
             self.set_text("Unknown longitude")
 
 
-class GpsAltitudeLabel(gtk.Label):
+class GpsAltitudeLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.Label.__init__(self)
         self.set_selectable(True)
+
+    def set_gps(self, gps):
         self.device = gps["Position"]
         self.device.connect_to_signal("PositionChanged", self.changed)
         self.device.GetPosition(reply_handler=self.changed, error_handler=error_handler)
@@ -104,9 +130,12 @@ class GpsAltitudeLabel(gtk.Label):
             self.set_text("Unknown altitude")
 
 
-class GpsSatelliteChart(gtk.HBox):
+class GpsSatelliteChart(GpsWidget, gtk.HBox):
     def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.HBox.__init__(self, True, 2)
+
+    def set_gps(self, gps):
         self.device = gps['Satellite']
         self.device.connect_to_signal("SatellitesChanged", self.changed)
         self.device.GetSatellites(reply_handler=self.changed, error_handler=error_handler)
@@ -135,13 +164,16 @@ class GpsSatelliteChart(gtk.HBox):
             self.add(box)
 
 
-class MapView(gtk.Image):
+class MapView(GpsWidget, gtk.Image):
     def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
         gtk.Image.__init__(self)
+        self.current_quad = None
+
+    def set_gps(self, gps):
         self.device = gps["Position"]
         self.device.connect_to_signal("PositionChanged", self.changed)
         self.device.GetPosition(reply_handler=self.changed, error_handler=error_handler)
-        self.current_quad = None
         
     def changed(self, fields, timestamp, latitude, longitude, altitude):
         import urllib2
