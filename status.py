@@ -8,6 +8,8 @@ def error_handler(exception):
     # TODO: display dialog
     print exception
 
+
+# Base class for GPS-using widgets to derive from.
 class GpsWidget(gtk.Widget):
     def __init__(self, gps):
         gtk.Widget.__init__(self)
@@ -15,6 +17,7 @@ class GpsWidget(gtk.Widget):
         
     def set_gps(self, gps):
         raise NotImplementedError
+
 
 # A GtkLabel which displays the latest time as reported by the GPS.
 class GpsTimeLabel(GpsWidget, gtk.Label):
@@ -58,7 +61,7 @@ class GpsFixStatusbar(GpsWidget, gtk.Statusbar):
         else:
             self.push(self.context, "Invalid fix")
 
-
+# A GtkLabel showing the dilution of precision.
 class GpsAccuracyLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
@@ -77,6 +80,7 @@ class GpsAccuracyLabel(GpsWidget, gtk.Label):
             (fields & gypsy.ACCURACY_FIELDS_VERTICAL) and vdop or 0))
 
 
+# A GtkLabel showing the current latitude
 class GpsLatitudeLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
@@ -94,6 +98,8 @@ class GpsLatitudeLabel(GpsWidget, gtk.Label):
         else:
             self.set_text("Unknown latitude")
 
+
+# A GtkLabel showing the current longitude
 class GpsLongitudeLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
@@ -112,6 +118,7 @@ class GpsLongitudeLabel(GpsWidget, gtk.Label):
             self.set_text("Unknown longitude")
 
 
+# A GtkLabel showing the current altitude
 class GpsAltitudeLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
@@ -129,7 +136,7 @@ class GpsAltitudeLabel(GpsWidget, gtk.Label):
         else:
             self.set_text("Unknown altitude")
 
-
+# A widget showing the current satellites and their signal strength
 class GpsSatelliteChart(GpsWidget, gtk.HBox):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
@@ -163,7 +170,7 @@ class GpsSatelliteChart(GpsWidget, gtk.HBox):
             box.show_all()
             self.add(box)
 
-
+# An image showing the local area
 class MapView(GpsWidget, gtk.Image):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
