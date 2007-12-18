@@ -171,7 +171,7 @@ class GpsSatelliteChart(GpsWidget, gtk.HBox):
             self.add(box)
 
 # An image showing the local area
-class MapView(GpsWidget, gtk.Image):
+class GoogleSatelliteView(GpsWidget, gtk.Image):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
         gtk.Image.__init__(self)
@@ -255,7 +255,7 @@ for (l, w) in widgets:
     table.attach(label, 1, 2, y, y+1, yoptions=gtk.FILL)
     y = y + 1
 
-table.attach(MapView(gps), 2, 3, 0, y)
+table.attach(GoogleSatelliteView(gps), 2, 3, 0, y)
 
 table.attach(GpsSatelliteChart(gps), 0, 3, y, y+1)
 
