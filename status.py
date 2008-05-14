@@ -236,7 +236,7 @@ class GoogleSatelliteView(GpsWidget, gtk.Image):
 DBusGMainLoop(set_as_default=True)
 
 gps = gypsy.GPS("00:0B:0D:88:A4:A3")
-gps.Start()
+gps['Device'].Start()
 
 window = gtk.Window()
 window.connect("delete-event", gtk.main_quit)

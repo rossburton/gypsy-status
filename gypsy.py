@@ -39,12 +39,12 @@ DEVICE_FIX_STATUS_2D = 2
 DEVICE_FIX_STATUS_3D = 3
 
 
-class Control(dbus.proxies.ProxyObject):
+class Control(dbus.proxies.Interface):
     def __init__(self):
-        dbus.proxies.ProxyObject.__init__(self,
-                                          bus=dbus.SystemBus(),
-                                          named_service=DBUS_SERVICE,
-                                          object_path=DBUS_PATH)
+        proxy = dbus.proxies.ProxyObject(dbus.SystemBus(),
+                                         DBUS_SERVICE,
+                                         DBUS_PATH)
+        dbus.proxies.Interface.__init__(self, proxy, "org.freedesktop.Gypsy.Server")
 
 
 class GPS(dbus.proxies.ProxyObject):
@@ -56,9 +56,9 @@ class GPS(dbus.proxies.ProxyObject):
             path = Control().Create(device)
         
         dbus.proxies.ProxyObject.__init__(self,
-                                          bus=dbus.SystemBus(),
-                                          named_service=DBUS_SERVICE,
-                                          object_path=path)
+                                          dbus.SystemBus(),
+                                          DBUS_SERVICE,
+                                          path)
     
     def __getitem__(self, name):
         # TODO: bother with this, or just create the interface name?
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
     gps = GPS("00:0B:0D:88:A4:A3")
-    gps.Start()
+    gps['Device'].Start()
     
     def position_changed(fields, timestamp, latitude, longitude, altitude):
         print "%d: %2f, %2f (%1fm)" % (
