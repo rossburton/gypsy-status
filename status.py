@@ -185,7 +185,7 @@ class GpsSatelliteChart(GpsWidget, gtk.HBox):
             box.show_all()
             self.add(box)
 
-# An image showing the local area
+# An image showing a satellite view of the area, hacked from Google Maps.
 class GoogleSatelliteView(GpsWidget, gtk.Image):
     def __init__(self, gps):
         GpsWidget.__init__(self, gps)
@@ -232,6 +232,67 @@ class GoogleSatelliteView(GpsWidget, gtk.Image):
             digits = digits - 1
         return quad
 
+# An image showing a street map of the local area, using the Yahoo mapping
+# service.
+class YahooMapView(GpsWidget, gtk.Image):
+    
+    appid = "c0ifISrV34Gd86w2vO.o2KYw_MeEAeogclikp6Atdw3VxzYACBhf8mwHiBX9oJS73YSM"
+    
+    def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
+        gtk.Image.__init__(self)
+        
+        self.current_lat = None
+        self.current_lon = None
+        self.current_url = None
+
+    def set_gps(self, gps):
+        self.device = gps["Position"]
+        self.device.connect_to_signal("PositionChanged", self.changed)
+        self.device.GetPosition(reply_handler=self.changed, error_handler=error_handler)
+
+    def changed(self, fields, timestamp, latitude, longitude, altitude):
+        from urllib import urlopen, urlencode
+        import xml.etree.ElementTree as etree
+
+        if fields & (gypsy.POSITION_FIELDS_LONGITUDE + gypsy.POSITION_FIELDS_LATITUDE):
+            if round(latitude, 3) == self.current_lat and round (longitude, 3) == self.current_lon:
+                return
+            
+            print latitude, self.current_lat
+            print longitude, self.current_lon
+            
+            self.current_lat = round(latitude, 3)
+            self.current_lon = round(longitude, 3)
+            
+            # TODO: use Twisted or do this in a thread
+            url = "http://local.yahooapis.com/MapsService/V1/mapImage"
+            query = {
+                "appid": self.appid,
+                "image_width": 200,
+                "image_height": 200,
+                "zoom": 3,
+                "latitude": latitude,
+                "longitude": longitude
+                }
+            rsp = etree.parse(urlopen(url, urlencode(query))).getroot()
+            if rsp.tag != "Result":
+                self.clear()
+                return
+            url = rsp.text
+
+            # Don't reload if the URL hasn't changed
+            if url == self.current_url:
+                return
+            self.current_url = url
+            
+            loader = gtk.gdk.PixbufLoader()
+            for d in urlopen(rsp.text):
+                loader.write(d)
+            loader.close()
+            pixbuf = loader.get_pixbuf()
+            self.set_from_pixbuf(pixbuf)
+
 
 DBusGMainLoop(set_as_default=True)
 
@@ -270,7 +331,7 @@ for (l, w) in widgets:
     table.attach(label, 1, 2, y, y+1, yoptions=gtk.FILL)
     y = y + 1
 
-table.attach(GoogleSatelliteView(gps), 2, 3, 0, y)
+table.attach(YahooMapView(gps), 2, 3, 0, y)
 
 table.attach(GpsSatelliteChart(gps), 0, 3, y, y+1)
 
