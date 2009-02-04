@@ -76,6 +76,7 @@ class GpsFixStatusbar(GpsWidget, gtk.Statusbar):
         else:
             self.push(self.context, "Invalid fix")
 
+
 # A GtkLabel showing the dilution of precision.
 class GpsAccuracyLabel(GpsWidget, gtk.Label):
     def __init__(self, gps):
@@ -151,6 +152,7 @@ class GpsAltitudeLabel(GpsWidget, gtk.Label):
         else:
             self.set_text("Unknown altitude")
 
+
 # A widget showing the current satellites and their signal strength
 class GpsSatelliteChart(GpsWidget, gtk.HBox):
     def __init__(self, gps):
@@ -184,6 +186,7 @@ class GpsSatelliteChart(GpsWidget, gtk.HBox):
             
             box.show_all()
             self.add(box)
+
 
 # An image showing a satellite view of the area, hacked from Google Maps.
 class GoogleSatelliteView(GpsWidget, gtk.Image):
@@ -231,6 +234,7 @@ class GoogleSatelliteView(GpsWidget, gtk.Image):
             y = y * 2
             digits = digits - 1
         return quad
+
 
 # An image showing a street map of the local area, using the Yahoo mapping
 # service.
