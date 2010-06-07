@@ -52,11 +52,14 @@ class GPS(dbus.proxies.ProxyObject):
         if not device and not path:
             raise Error("device or path need to be specified")
         
+        bus = dbus.SystemBus()
+        print bus.start_service_by_name(DBUS_SERVICE)
+
         if path is None:
             path = Control().Create(device)
-        
+
         dbus.proxies.ProxyObject.__init__(self,
-                                          dbus.SystemBus(),
+                                          bus,
                                           DBUS_SERVICE,
                                           path)
     
