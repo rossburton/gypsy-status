@@ -349,10 +349,10 @@ for (l, w) in widgets:
     label = gtk.Label("<b>%s:</b>" % l)
     label.set_use_markup(True)
     label.set_alignment(0.0, 0.0)
-    table.attach(label, 0, 1, y, y+1, xoptions=gtk.FILL, yoptions=gtk.FILL)
+    table.attach(label, 0, 1, y, y+1, xoptions=gtk.FILL)
     label = w(gps)
     label.set_alignment(0.0, 0.0)
-    table.attach(label, 1, 2, y, y+1, yoptions=gtk.FILL)
+    table.attach(label, 1, 2, y, y+1, xoptions=gtk.FILL)
     y = y + 1
 
 table.attach(OsmMapView(gps), 2, 3, 0, y)
