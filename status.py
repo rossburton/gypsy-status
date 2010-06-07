@@ -188,6 +188,26 @@ class GpsSatelliteChart(GpsWidget, gtk.HBox):
             self.add(box)
 
 
+# An image showing a map view of the area, from OpenStreetMap
+import osmgpsmap
+
+class OsmMapView(GpsWidget, osmgpsmap.GpsMap):
+    def __init__(self, gps):
+        GpsWidget.__init__(self, gps)
+        osmgpsmap.GpsMap.__init__(self)
+        self.add_layer(osmgpsmap.GpsMapOsd(show_dpad=False, show_zoom=True))
+        self.set_zoom(12)
+
+    def set_gps(self, gps):
+        self.device = gps["Position"]
+        self.device.connect_to_signal("PositionChanged", self.changed)
+        self.device.GetPosition(reply_handler=self.changed, error_handler=error_handler)
+
+    def changed(self, fields, timestamp, latitude, longitude, altitude):
+        if fields & (gypsy.POSITION_FIELDS_LONGITUDE + gypsy.POSITION_FIELDS_LATITUDE):
+            self.set_center (latitude, longitude);
+            self.draw_gps(latitude, longitude, osmgpsmap.INVALID)
+
 # An image showing a satellite view of the area, hacked from Google Maps.
 class GoogleSatelliteView(GpsWidget, gtk.Image):
     def __init__(self, gps):
@@ -335,7 +355,7 @@ for (l, w) in widgets:
     table.attach(label, 1, 2, y, y+1, yoptions=gtk.FILL)
     y = y + 1
 
-table.attach(YahooMapView(gps), 2, 3, 0, y)
+table.attach(OsmMapView(gps), 2, 3, 0, y)
 
 table.attach(GpsSatelliteChart(gps), 0, 3, y, y+1)
 
