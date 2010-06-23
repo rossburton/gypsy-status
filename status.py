@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import time
+import sys, time
 import gypsy, gtk
 from dbus.mainloop.glib import DBusGMainLoop
 
@@ -320,7 +320,10 @@ class YahooMapView(GpsWidget, gtk.Image):
 
 DBusGMainLoop(set_as_default=True)
 
-gps = gypsy.GPS("00:0B:0D:88:A4:A3")
+if len(sys.argv):
+    gps = gypsy.GPS(sys.argv[1])
+else:
+    gps = gypsy.GPS("/dev/ttyUSB0")
 gps['Device'].Start()
 
 window = gtk.Window()
