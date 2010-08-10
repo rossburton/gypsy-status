@@ -320,7 +320,7 @@ class YahooMapView(GpsWidget, gtk.Image):
 
 DBusGMainLoop(set_as_default=True)
 
-if len(sys.argv):
+if len(sys.argv) > 1:
     gps = gypsy.GPS(sys.argv[1])
 else:
     gps = gypsy.GPS("/dev/ttyUSB0")
